@@ -1,10 +1,8 @@
 [project]
-name = "chat_activity"
+name = "notable_moments"
 version = "0.1.0"
-description = "Default template for PDM package"
-authors = [
-    { name = "heko", email = "91366057+hkohko@users.noreply.github.com" },
-]
+description = "Get notable timestamps from a YT VOD via livestream chat"
+authors = [{ name = "hemakodaa", email = "hemakodaa@gmail.com" }]
 dependencies = [
     "chat-downloader>=0.2.8",
     "numpy>=2.2.1",
@@ -13,13 +11,19 @@ dependencies = [
     "requests>=2.32.3",
     "lxml>=5.3.0",
 ]
-requires-python = "==3.13.*"
+requires-python = ">=3.13"
 readme = "README.md"
 license = { text = "MIT" }
 
 
 [tool.pdm]
-distribution = false
+distribution = true
 
 [tool.pdm.scripts]
-test_run = "python src/notable_moments/test_run.py"
+test = "pytest"
+
+[tool.pdm.dev-dependencies]
+test = ["pytest>=8.3.4"]
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
