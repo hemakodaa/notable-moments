@@ -52,8 +52,7 @@ def message_processing(URL: str) -> list[float]:
     stream_start = (
         all_live_chat[0].get("timestamp") / 1_000_000
     )  # timestamp is in Unix epoch (microsecond)
-    for count, c in enumerate(all_live_chat):
-        print(f"Processing {count} chat...", end="\r")
+    for c in all_live_chat:
         time_list.append(
             calculate_chat_live_timestamp(c.get("timestamp"), stream_start)
         )
