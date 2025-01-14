@@ -1,5 +1,11 @@
 from chat_downloader import ChatDownloader
 from chat_downloader.sites.common import Chat
+from chat_downloader.errors import (
+    URLNotProvided,
+    InvalidURL,
+    SiteNotSupported,
+    ChatGeneratorError,
+)
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -17,6 +23,8 @@ def get_percentile(item_frequency: list[tuple[int, int]], percentile: int):
 
 def get_title(URL) -> str:
     r = requests.get(URL)
+    if r.status_code != 200:
+        return "Requesting title returned non 200 code."
     soup = BeautifulSoup(r.text, "lxml")
     title: str = soup.find_all(name="title")[0].text
     return title
@@ -24,8 +32,11 @@ def get_title(URL) -> str:
 
 def chat(URL) -> Chat:
     chat_download_start = time.time()
-    c: Chat = ChatDownloader().get_chat(URL)
-    print(f"Total chat download runtime: {time.time() - chat_download_start}")
+    try:
+        c: Chat = ChatDownloader().get_chat(URL)
+        print(f"Total chat download runtime: {time.time() - chat_download_start}")
+    except (URLNotProvided, InvalidURL, SiteNotSupported, ChatGeneratorError) as e:
+        exit(e)
     return c
 
 
