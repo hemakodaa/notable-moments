@@ -1,5 +1,5 @@
-from graph import plot
-from msg import get_title, get_percentile, message_processing
+from notable_moments.graph import plot
+from notable_moments.msg import get_title, get_percentile, message_processing
 import numpy as np
 
 
