@@ -1,1 +1,1 @@
-from .nm import notable_moments
+from notable_moments.nm import notable_moments
