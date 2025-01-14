@@ -11,13 +11,16 @@ def sanitize_title(title: str):
     return "".join(collected_matches)
 
 
-def plot(time_list: list[float], title: str):
-    plt.title(title)
+def plot(time_list: list[float], title: str, save: bool):
+    if not save:
+        return
+    filename = f"{sanitize_title(title)}.png"
     figure(figsize=(52, 6), dpi=80)
+    plt.title(title)
     plt.hist(time_list, int(time_list[-1]))
     ax = plt.gca()
     ax.xaxis.set_major_locator(ticker.MaxNLocator(int(time_list[-1]) / 4))
-    plt.savefig(f"{sanitize_title(title)}.png")
+    plt.savefig(filename)
 
 
 if __name__ == "__main__":
