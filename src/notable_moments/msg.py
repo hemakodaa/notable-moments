@@ -1,24 +1,10 @@
 from chat_downloader import ChatDownloader
 from chat_downloader.sites.common import Chat
-
-# import matplotlib.pyplot as plt
 from datetime import datetime
-
-# from matplotlib.pyplot import figure
-# import matplotlib.ticker as ticker
 import requests
 from bs4 import BeautifulSoup
 import time
 import numpy as np
-
-# CHANGE URL AND THEN RUN THIS NEXT
-# CHANGE GRAPH SIZE HERE
-# figure(figsize=(52, 6), dpi=80)
-# def plot(time_list: list[float], title: str):
-#     plt.hist(time_list, int(time_list[-1]))
-#     ax = plt.gca()
-#     ax.xaxis.set_major_locator(ticker.MaxNLocator(int(time_list[-1]) / 4))
-#     plt.savefig(f"{title}.png")
 
 
 def get_percentile(item_frequency: list[tuple[int, int]], percentile: int):
@@ -33,7 +19,7 @@ def get_title(URL) -> str:
     r = requests.get(URL)
     soup = BeautifulSoup(r.text, "lxml")
     title: str = soup.find_all(name="title")[0].text
-    return title.encode()
+    return title
 
 
 def chat(URL) -> Chat:

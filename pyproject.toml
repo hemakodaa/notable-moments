@@ -22,4 +22,4 @@ license = { text = "MIT" }
 distribution = false
 
 [tool.pdm.scripts]
-main = "python src/chat_activity/main.py"
+test_run = "python src/notable_moments/test_run.py"
