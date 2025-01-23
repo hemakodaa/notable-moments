@@ -9,8 +9,27 @@ from chat_downloader.errors import (
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
+from enum import Enum, auto
+import re
 import time
 import numpy as np
+
+
+class MsgFilter(Enum):
+    ACTIVITY = auto()
+    REGEX = auto()
+
+
+class FilterKind:
+    def __init__(self, kind: MsgFilter, pattern: None | str = None):
+        self.p = pattern
+        self.k = kind
+
+    def pattern(self) -> str | None:
+        return self.p
+
+    def kind(self) -> MsgFilter:
+        return self.k
 
 
 def get_percentile(item_frequency: list[tuple[int, int]], percentile: int):
@@ -40,20 +59,49 @@ def chat(URL) -> Chat:
     return c
 
 
-def calculate_chat_live_timestamp(message: int, stream_start: datetime):
-    duration = (message / 1_000_000) - stream_start
+def calculate_chat_live_timestamp(message_timestamp: int, stream_start: datetime):
+    # this returns the timestamp in minutes format
+    duration = (message_timestamp / 1_000_000) - stream_start
     duration_in_minutes = int(duration // 60)
     return duration_in_minutes
 
 
-def message_processing(URL: str) -> list[float]:
+def message_processing(URL: str, filter_kind: FilterKind) -> list[float]:
     time_list = []
-    all_live_chat = list(filter(lambda x: x.get("time_in_seconds") > 0, chat(URL)))
-    stream_start = (
-        all_live_chat[0].get("timestamp") / 1_000_000
-    )  # timestamp is in Unix epoch (microsecond)
-    for c in all_live_chat:
-        time_list.append(
-            calculate_chat_live_timestamp(c.get("timestamp"), stream_start)
-        )
-    return time_list
+    match filter_kind.kind():
+        case MsgFilter.ACTIVITY:
+            all_live_chat = list(
+                filter(lambda x: x.get("time_in_seconds") > 0, chat(URL))
+            )
+        case MsgFilter.REGEX:
+            if not filter_kind.pattern():
+                raise ValueError("No keyword inserted.")
+            try:
+                compile = re.compile(rf"{filter_kind.pattern()}")
+            except re.error as e:
+                raise ValueError(e)
+            all_live_chat = list(
+                filter(
+                    lambda x: x.get("time_in_seconds") > 0
+                    and [m for m in compile.finditer(x.get("message"))],
+                    chat(URL),
+                )
+            )
+        case _:
+            raise ValueError("BUG: MsgFilter was not used")
+    match filter_kind.kind():
+        case MsgFilter.ACTIVITY:
+            stream_start = (
+                all_live_chat[0].get("timestamp") / 1_000_000
+            )  # timestamp is in Unix epoch (microsecond)
+            for c in all_live_chat:
+                time_list.append(
+                    calculate_chat_live_timestamp(c.get("timestamp"), stream_start)
+                )
+            return time_list
+        case MsgFilter.REGEX:
+            for c in all_live_chat:
+                time_list.append(c.get("time_in_seconds") // 60)
+            return time_list
+        case _:
+            raise ValueError("BUG: MsgFilter was not used")

@@ -1,9 +1,14 @@
-from notable_moments import notable_moments
+from notable_moments import notable_keyword, notable_activity
 
 
-def test_run():
+def test_run_activity():
+    print(notable_activity("https://www.youtube.com/watch?v=_Hw2Spr4YQc", 90, False))
+
+
+def test_run_keyword():
     print(
-        notable_moments(
-            "https://www.youtube.com/watch?v=EjTDUBDHusQ&t=8354s", 90, True
+        notable_keyword(
+            "https://www.youtube.com/watch?v=_Hw2Spr4YQc",
+            "tskr|TSKR",
         )
     )
