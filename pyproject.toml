@@ -1,6 +1,6 @@
 [project]
 name = "notable_moments"
-version = "0.1.2"
+version = "0.2.0"
 description = "Get notable timestamps from a YT VOD via livestream chat"
 authors = [{ name = "hemakodaa", email = "hemakodaa@gmail.com" }]
 dependencies = [
