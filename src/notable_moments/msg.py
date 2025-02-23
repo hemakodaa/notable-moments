@@ -5,6 +5,7 @@ from chat_downloader.errors import (
     InvalidURL,
     SiteNotSupported,
     ChatGeneratorError,
+    NoChatReplay
 )
 from datetime import datetime
 import requests
@@ -54,7 +55,7 @@ def chat(URL) -> Chat:
     try:
         c: Chat = ChatDownloader().get_chat(URL)
         print(f"Total chat download runtime: {time.time() - chat_download_start}")
-    except (URLNotProvided, InvalidURL, SiteNotSupported, ChatGeneratorError) as e:
+    except (URLNotProvided, InvalidURL, SiteNotSupported, ChatGeneratorError, NoChatReplay) as e:
         exit(e)
     return c
 
@@ -77,7 +78,7 @@ def message_processing(URL: str, filter_kind: FilterKind) -> list[float]:
             if not filter_kind.pattern():
                 raise ValueError("No keyword inserted.")
             try:
-                compile = re.compile(rf"{filter_kind.pattern()}")
+                compile = re.compile(rf"{filter_kind.pattern()}", re.IGNORECASE)
             except re.error as e:
                 raise ValueError(e)
             all_live_chat = list(
