@@ -1,12 +1,11 @@
 [project]
 name = "notable_moments"
-version = "0.2.1"
+version = "0.2.2"
 description = "Get notable timestamps from a YT VOD via livestream chat"
 authors = [{ name = "hemakodaa", email = "hemakodaa@gmail.com" }]
 dependencies = [
     "chat-downloader>=0.2.8",
     "numpy>=2.2.1",
-    "matplotlib>=3.10.0",
     "bs4>=0.0.2",
     "requests>=2.32.3",
     "lxml>=5.3.0",
@@ -21,6 +20,7 @@ distribution = true
 
 [tool.pdm.scripts]
 test = "pytest"
+cdl = "python ./src/notable_moments/chat_download.py"
 
 [tool.pdm.dev-dependencies]
 test = ["pytest>=8.3.4"]

@@ -1,4 +1,4 @@
-from notable_moments.graph import plot
+# from notable_moments.graph import plot
 from notable_moments.msg import (
     get_title,
     get_percentile,
@@ -34,5 +34,5 @@ def notable_activity(URL: str, percentile: int, save: bool) -> list[float, int]:
     frequency = list(map(lambda x: x.item(), np.bincount(msg)))
     item_frequency = list(zip(item, frequency))
     nm = get_percentile(item_frequency, percentile)
-    plot(msg, title, save)
+    # plot(msg, title, save)
     return nm
