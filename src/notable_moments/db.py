@@ -5,32 +5,40 @@ import json
 
 
 class ChatItemParser:
-    def __init__(self, json: dict):
-        self.json = json
+    def __init__(self, json_file: dict):
+        self._json = json_file
+
+    @property
+    def _set_json(self, json_file: dict):
+        return self._json
+
+    @_set_json.setter
+    def _set_json(self, value: dict):
+        self._json = value
 
     def time_in_seconds(self) -> int:
-        return self.json.get("time_in_seconds")
+        return self._json.get("time_in_seconds")
 
     def action_type(self) -> str:
-        return self.json.get("action_type")
+        return self._json.get("action_type")
 
     def message(self) -> str:
-        return self.json.get("message")
+        return self._json.get("message")
 
     def message_id(self) -> str:
-        return self.json.get("message_id")
+        return self._json.get("message_id")
 
     def timestamp(self) -> int:
-        return self.json.get("timestamp")
+        return self._json.get("timestamp")
 
     def time_text(self) -> str:
-        return self.json.get("time_text")
+        return self._json.get("time_text")
 
     def author(self) -> dict:
-        return self.json.get("author")
+        return self._json.get("author")
 
     def message_type(self) -> str:
-        return self.json.get("message_type")
+        return self._json.get("message_type")
 
     def _test(self):
         fns = [
@@ -50,8 +58,11 @@ class ChatItemParser:
 
 
 def parse_json(chat: Iterator) -> Iterator:
+    chat_parser = ChatItemParser({})
+    import time
+    start = time.time()
     for row in chat:
-        chat_parser = ChatItemParser(row)
+        chat_parser._set_json = row
         yield {
             "time_in_seconds": chat_parser.time_in_seconds(),
             "action_type": chat_parser.action_type(),
@@ -62,6 +73,7 @@ def parse_json(chat: Iterator) -> Iterator:
             "author": str(chat_parser.author()),  # stored as a text in db
             "message_type": chat_parser.message_type(),
         }
+    print(f"Finished in: {time.time() - start}")
 
 
 def connect_db(db_path: str) -> sqlite3.Connection:
@@ -131,9 +143,9 @@ def db_insert_main(db_path: str, video_id: str, chat: Iterator):
     conn = connect_db(db_path)
     table_name = video_id
     create_table(conn, table_name)
-    chat_items = [
-        c for c in parse_json(chat)
-    ]  # this will be the output of Chat
+    print("Parsing json file...")
+    chat_items = [c for c in parse_json(chat)]
+    print("parse complete")
     if chat_items:
         insert_into_table(conn, table_name, chat_items)
     else:
