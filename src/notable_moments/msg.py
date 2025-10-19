@@ -5,7 +5,14 @@ from chat_downloader.errors import (
     InvalidURL,
     SiteNotSupported,
     ChatGeneratorError,
-    NoChatReplay
+    NoChatReplay,
+)
+from collections.abc import Iterator
+from notable_moments.helper import get_video_id
+from notable_moments.db import (
+    check_chat_existence_in_db,
+    db_insert_main,
+    db_get_messages,
 )
 from datetime import datetime
 import requests
@@ -14,6 +21,7 @@ from enum import Enum, auto
 import re
 import time
 import numpy as np
+import configparser
 
 
 class MsgFilter(Enum):
@@ -50,14 +58,37 @@ def get_title(URL) -> str:
     return title
 
 
-def chat(URL) -> Chat:
+def get_db_path(configfile: str):
+    config = configparser.ConfigParser()
+    config.read(configfile)
+    if "DB" not in config.sections():
+        exit("DB config section not found")
+    chat_db_path = config["DB"]["chat_db"]
+    if not chat_db_path:
+        exit("chat_db path is not specified.")
+    return chat_db_path
+
+
+def chat(URL) -> Iterator:
     chat_download_start = time.time()
-    try:
-        c: Chat = ChatDownloader().get_chat(URL)
-        print(f"Total chat download runtime: {time.time() - chat_download_start}")
-    except (URLNotProvided, InvalidURL, SiteNotSupported, ChatGeneratorError, NoChatReplay) as e:
-        exit(e)
-    return c
+    video_id = get_video_id(URL)
+    db_path = get_db_path(".config")
+    if not check_chat_existence_in_db(db_path, video_id):
+        try:
+            c: Chat = ChatDownloader().get_chat(URL)
+            print(f"Total chat download runtime: {time.time() - chat_download_start}")
+        except (
+            URLNotProvided,
+            InvalidURL,
+            SiteNotSupported,
+            ChatGeneratorError,
+            NoChatReplay,
+        ) as e:
+            exit(e)
+        _ = db_insert_main(db_path, video_id, c)
+        return c
+    else:
+        return db_get_messages(video_id, db_path)
 
 
 def calculate_chat_live_timestamp(message_timestamp: int, stream_start: datetime):
@@ -106,3 +137,7 @@ def message_processing(URL: str, filter_kind: FilterKind) -> list[float]:
             return time_list
         case _:
             raise ValueError("BUG: MsgFilter was not used")
+
+
+if __name__ == "__main__":
+    chat("https://www.youtube.com/watch?v=WUSpKWTyrzs")

@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import time, timedelta
 from collections.abc import Iterator
 from pathlib import PurePath, Path
 import json
@@ -50,12 +49,9 @@ class ChatItemParser:
             exit("All good.")
 
 
-def parse_json(path: str) -> Iterator:
-    r = list()
-    with open(path, "r") as f:
-        r = json.load(f)  # list of dicts
-    for chat in r:
-        chat_parser = ChatItemParser(chat)
+def parse_json(chat: Iterator) -> Iterator:
+    for row in chat:
+        chat_parser = ChatItemParser(row)
         yield {
             "time_in_seconds": chat_parser.time_in_seconds(),
             "action_type": chat_parser.action_type(),
@@ -68,15 +64,13 @@ def parse_json(path: str) -> Iterator:
         }
 
 
-def connect_db() -> sqlite3.Connection:
-    db_path = PurePath("db").joinpath("chat.db")
+def connect_db(db_path: str) -> sqlite3.Connection:
     if not Path(db_path).exists():
         exit("Path to db doesn't exist.")
     return sqlite3.connect(db_path)
 
 
-def create_table(table_name: str):
-    conn = connect_db()
+def create_table(conn: sqlite3.Connection, table_name: str):
     cur = conn.cursor()
     stmt = (
         f"CREATE TABLE IF NOT EXISTS {table_name} ("
@@ -93,8 +87,7 @@ def create_table(table_name: str):
     cur.execute(stmt)
 
 
-def insert_into_table(table_name: str, values: list[dict]):
-    conn = connect_db()
+def insert_into_table(conn: sqlite3.Connection, table_name: str, values: list[dict]):
     cur = conn.cursor()
     stmt = (
         f"INSERT OR IGNORE INTO {table_name}"
@@ -105,14 +98,48 @@ def insert_into_table(table_name: str, values: list[dict]):
     conn.commit()
 
 
-def db_main():
-    table_name = "pankoscared" # this will be video id
-    create_table(table_name)
+def db_get_messages(video_id: str, db_path) -> Iterator[dict[str, int | str]]:
+    """
+    currently used msg: 'time_in_seconds', 'timestamp', 'message'
+    """
+    conn = connect_db(db_path)
+    cur = conn.cursor()
+
+    stmt = (
+        f"SELECT TIME_IN_SECONDS, TIMESTAMP, MESSAGE FROM {video_id} ORDER BY TIMESTAMP"
+    )
+    for row in cur.execute(stmt):
+        time_in_seconds, timestamp, message = row
+        yield {
+            "time_in_seconds": time_in_seconds,
+            "timestamp": timestamp,
+            "message": message,
+        }
+
+
+def check_chat_existence_in_db(db_path: str, video_id: str) -> bool:
+    conn = connect_db(db_path)
+    cur = conn.cursor()
+    stmt = "SELECT name FROM sqlite_master WHERE type='table' AND name=':video_id'"
+    does_it_exist = cur.execute(stmt, {"video_id": video_id})
+    return True if list(does_it_exist) else False
+
+
+def db_insert_main(db_path: str, video_id: str, chat: Iterator):
+    # TODO: how to get args for db path?
+    # answer: use configparser?
+    conn = connect_db(db_path)
+    table_name = video_id
+    create_table(conn, table_name)
     chat_items = [
-        c for c in parse_json(PurePath("chat_results").joinpath("pankoscared.json"))
-    ]
-    insert_into_table(table_name, chat_items)
+        c for c in parse_json(chat)
+    ]  # this will be the output of Chat
+    if chat_items:
+        insert_into_table(conn, table_name, chat_items)
+    else:
+        print("No chat for this Video exists.")
+    conn.close()
 
 
-if __name__ == "__main__":
-    db_main()
+# if __name__ == "__main__":
+#     simulate_get_messages()
