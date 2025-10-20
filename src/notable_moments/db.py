@@ -60,6 +60,7 @@ class ChatItemParser:
 def parse_json(chat: Iterator) -> Iterator:
     chat_parser = ChatItemParser({})
     import time
+
     start = time.time()
     for row in chat:
         chat_parser._set_json = row
@@ -132,7 +133,7 @@ def db_get_messages(video_id: str, db_path) -> Iterator[dict[str, int | str]]:
 def check_chat_existence_in_db(db_path: str, video_id: str) -> bool:
     conn = connect_db(db_path)
     cur = conn.cursor()
-    stmt = "SELECT name FROM sqlite_master WHERE type='table' AND name=':video_id'"
+    stmt = "SELECT name FROM sqlite_sequence WHERE name=:video_id"
     does_it_exist = cur.execute(stmt, {"video_id": video_id})
     return True if list(does_it_exist) else False
 
