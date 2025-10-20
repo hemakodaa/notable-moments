@@ -74,21 +74,10 @@ def chat(URL) -> Iterator:
     video_id = get_video_id(URL)
     db_path = get_db_path(".config")
     if not check_chat_existence_in_db(db_path, video_id):
-        try:
-            c: Chat = ChatDownloader().get_chat(URL)
-            print(f"Total chat download runtime: {time.time() - chat_download_start}")
-        except (
-            URLNotProvided,
-            InvalidURL,
-            SiteNotSupported,
-            ChatGeneratorError,
-            NoChatReplay,
-        ) as e:
-            exit(e)
+        c: Chat = ChatDownloader().get_chat(URL)
+        print(f"Total chat download runtime: {time.time() - chat_download_start}")
         _ = db_insert_main(db_path, video_id, c)
-        return c
-    else:
-        return db_get_messages(video_id, db_path)
+    return db_get_messages(video_id, db_path)
 
 
 def calculate_chat_live_timestamp(message_timestamp: int, stream_start: datetime):
